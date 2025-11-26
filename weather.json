@@ -1,0 +1,356 @@
+{
+  "name": "weather",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "هوا شناسی",
+        "formDescription": "این فرم جهت پیدا کردن کم ترین و بیشترین دما در روز برای شهر شما ساخته شده است",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "شهر خود را وارد کنید",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "مشهد "
+                  },
+                  {
+                    "option": "تهران "
+                  },
+                  {
+                    "option": "شیراز"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ce0b4ce3-2cc6-4d92-9ceb-fe03a42a419f",
+      "name": "On form submission",
+      "webhookId": "d5a7c89c-19da-4ab6-9d80-4e3fca5e1b8a"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json['شهر خود را وارد کنید'] }}",
+                    "rightValue": "مشهد ",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "61de482a-afe9-488f-8bc6-5c3622b02072"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "6270af18-cc42-47f2-8fea-e3120cf90dc3",
+                    "leftValue": "={{ $json['شهر خود را وارد کنید'] }}",
+                    "rightValue": "تهران ",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "cd4a753c-c022-4c04-81f9-f27d84966ce4",
+                    "leftValue": "={{ $json['شهر خود را وارد کنید'] }}",
+                    "rightValue": "شیراز",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        208,
+        -16
+      ],
+      "id": "1190eda9-a3e2-46d6-a866-4673e55bb6ac",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.open-meteo.com/v1/forecast?latitude={{ $json.Latitude }}&longitude={{ $json.Longitude }}&hourly=temperature_2m",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        656,
+        0
+      ],
+      "id": "9eaee012-fd8f-4588-86fa-910ea8d9d6e2",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = items[0].json;\n\nconst times = data.hourly.time;\nconst temps = data.hourly.temperature_2m;\n\nlet minTemp = temps[0];\nlet maxTemp = temps[0];\n\nfor (const t of temps) {\n  if (t < minTemp) minTemp = t;\n  if (t > maxTemp) maxTemp = t;\n}\n\nconst minTimes = times.filter((t, i) => temps[i] === minTemp);\nconst maxTimes = times.filter((t, i) => temps[i] === maxTemp);\n\nreturn [\n  {\n    json: {\n      min: { value: minTemp, times: minTimes },\n      max: { value: maxTemp, times: maxTimes }\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        864,
+        0
+      ],
+      "id": "33228a5d-39a0-4e70-9312-7e43f432079e",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7d874a6d-4f1d-4ec1-ad3c-5681c3a9ec49",
+              "name": "Longitude",
+              "value": 59.5995,
+              "type": "number"
+            },
+            {
+              "id": "7593a7ea-b80c-422b-92a8-9975b536af72",
+              "name": "Latitude",
+              "value": 36.3107,
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        -144
+      ],
+      "id": "c2807e22-f05b-402f-8f06-0abe56322e2c",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7d874a6d-4f1d-4ec1-ad3c-5681c3a9ec49",
+              "name": "Longitude",
+              "value": 51.4215,
+              "type": "number"
+            },
+            {
+              "id": "7593a7ea-b80c-422b-92a8-9975b536af72",
+              "name": "Latitude",
+              "value": 35.6944,
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "5c464f36-46a6-4f39-863b-9f98c3410dbd",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7d874a6d-4f1d-4ec1-ad3c-5681c3a9ec49",
+              "name": "Longitude",
+              "value": 52.5837,
+              "type": "number"
+            },
+            {
+              "id": "7593a7ea-b80c-422b-92a8-9975b536af72",
+              "name": "Latitude",
+              "value": 29.5918,
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        144
+      ],
+      "id": "5412e01c-2607-4a15-8598-b7fbbb035e47",
+      "name": "Edit Fields2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ffad6ccb-2236-4573-83bc-ce64dd041cd7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2d5214ec4f038bd2ce4d324556c34d30e5301730df2cc300ff693b71c793b88c"
+  },
+  "id": "414wUkJxA0PNcdZj",
+  "tags": [
+    {
+      "updatedAt": "2025-11-20T21:56:37.362Z",
+      "createdAt": "2025-11-20T21:56:37.362Z",
+      "id": "dCRXSX3obsbQZCgi",
+      "name": "form"
+    },
+    {
+      "updatedAt": "2025-11-24T22:00:23.292Z",
+      "createdAt": "2025-11-24T22:00:23.292Z",
+      "id": "n4yH1CSfe6WGO9Gt",
+      "name": "http request"
+    }
+  ]
+}
